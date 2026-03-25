@@ -5,9 +5,9 @@ import {
   getDashboard,
   selectCharity,
   getSubscriptionStatus
-} from "../controllers/userController.js";
+} from "./userController.js";
 
-import { authMiddleware } from "../middleware/authMiddleware.js";
+import { authMiddleware } from "./authMiddleware.js";
 
 const router = express.Router();
 

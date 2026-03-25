@@ -31,9 +31,9 @@ import {
 
   // ANALYTICS
   getAnalytics
-} from "../controllers/adminController.js";
+} from "./adminController.js";
 
-import { authMiddleware, isAdmin } from "../middleware/authMiddleware.js";
+import { authMiddleware, isAdmin } from "./authMiddleware.js";
 
 const router = express.Router();
 

@@ -1,4 +1,4 @@
-import supabase from "../config/db.js";
+import supabase from "./db.js";
 
 export const addScore = async (req, res) => {
   const userId = req.user.id;
@@ -19,7 +19,8 @@ export const addScore = async (req, res) => {
 
   const { data, error } = await supabase
     .from("scores")
-    .insert([{ user_id: userId, score, date }]);
+    .insert([{ user_id: userId, score, date }])
+    .select();
 
   if (error) return res.status(400).json(error);
 

@@ -1,6 +1,6 @@
-import supabase from "../config/db.js";
-import { calculateWinners } from "../utils/winnerLogic.js";
-import { getPredictedDraw } from "../services/mlservice.js"; // ✅ ML IMPORT
+import supabase from "./db.js";
+import { calculateWinners } from "./winnerLogic.js";
+import { getPredictedDraw } from "./mlservice.js";
 
 /* ===============================
    📊 ADMIN DASHBOARD
@@ -59,19 +59,16 @@ export const generateDrawWithML = async (req, res) => {
     // 1️⃣ Get past scores
     const { data: scoresData, error: scoreError } = await supabase
       .from("scores")
-      .select("numbers");
+      .select("score");
 
     if (scoreError) {
       return res.status(500).json({ error: "Error fetching scores" });
     }
 
-    // 2️⃣ Flatten scores
-    let allScores = [];
-    scoresData.forEach((s) => {
-      if (Array.isArray(s.numbers)) {
-        allScores.push(...s.numbers);
-      }
-    });
+    // 2️⃣ Collect all score values
+    const allScores = scoresData
+      .filter((s) => s.score !== null)
+      .map((s) => s.score);
 
     // 3️⃣ Call ML API
     const predictedNumbers = await getPredictedDraw(allScores);
@@ -158,9 +155,10 @@ export const publishDraw = async (req, res) => {
 
     // 4️⃣ Insert winners
     if (winners.length > 0) {
+      const winnersWithDraw = winners.map((w) => ({ ...w, draw_id }));
       const { error: insertError } = await supabase
         .from("winners")
-        .insert(winners);
+        .insert(winnersWithDraw);
 
       if (insertError) {
         return res.status(500).json({ error: "Error inserting winners" });
@@ -220,6 +218,170 @@ export const updateWinnerPayment = async (req, res) => {
     }
 
     res.json({ message: "Payment status updated" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/* ===============================
+   👤 USER MANAGEMENT
+================================ */
+export const getAllUsers = async (req, res) => {
+  try {
+    const { data, error } = await supabase.from("users").select("*");
+    if (error) return res.status(500).json({ error: "Error fetching users" });
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { error } = await supabase.from("users").update(req.body).eq("id", id);
+    if (error) return res.status(500).json({ error: "Error updating user" });
+    res.json({ message: "User updated" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { error } = await supabase.from("users").delete().eq("id", id);
+    if (error) return res.status(500).json({ error: "Error deleting user" });
+    res.json({ message: "User deleted" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/* ===============================
+   🎲 RUN RANDOM DRAW (ADMIN)
+================================ */
+import { generateDraw } from "./generateDraw.js";
+
+export const runDrawAdmin = async (req, res) => {
+  try {
+    const numbers = generateDraw();
+    const { data, error } = await supabase
+      .from("draws")
+      .insert([{ numbers, status: "pending" }])
+      .select();
+    if (error) return res.status(500).json({ error: "Error running draw" });
+    res.json({ message: "Draw created", draw: data });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/* ===============================
+   ❤️ CHARITY MANAGEMENT
+================================ */
+export const getAllCharities = async (req, res) => {
+  try {
+    const { data, error } = await supabase.from("charities").select("*");
+    if (error) return res.status(500).json({ error: "Error fetching charities" });
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const addCharity = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("charities")
+      .insert([req.body])
+      .select();
+    if (error) return res.status(500).json({ error: "Error adding charity" });
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const updateCharity = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { error } = await supabase.from("charities").update(req.body).eq("id", id);
+    if (error) return res.status(500).json({ error: "Error updating charity" });
+    res.json({ message: "Charity updated" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const deleteCharity = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { error } = await supabase.from("charities").delete().eq("id", id);
+    if (error) return res.status(500).json({ error: "Error deleting charity" });
+    res.json({ message: "Charity deleted" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/* ===============================
+   🏅 WINNER MANAGEMENT (EXTRA)
+================================ */
+export const getWinners = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("winners")
+      .select("*, users(email)")
+      .order("created_at", { ascending: false });
+    if (error) return res.status(500).json({ error: "Error fetching winners" });
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const verifyWinner = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { error } = await supabase
+      .from("winners")
+      .update({ status: "verified" })
+      .eq("id", id);
+    if (error) return res.status(500).json({ error: "Error verifying winner" });
+    res.json({ message: "Winner verified" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const markAsPaid = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { error } = await supabase
+      .from("winners")
+      .update({ payment_status: "paid" })
+      .eq("id", id);
+    if (error) return res.status(500).json({ error: "Error marking as paid" });
+    res.json({ message: "Winner marked as paid" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/* ===============================
+   📈 ANALYTICS
+================================ */
+export const getAnalytics = async (req, res) => {
+  try {
+    const [{ count: userCount }, { count: drawCount }, { count: winnerCount }] =
+      await Promise.all([
+        supabase.from("users").select("*", { count: "exact", head: true }),
+        supabase.from("draws").select("*", { count: "exact", head: true }),
+        supabase.from("winners").select("*", { count: "exact", head: true }),
+      ]);
+
+    res.json({ users: userCount, draws: drawCount, winners: winnerCount });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

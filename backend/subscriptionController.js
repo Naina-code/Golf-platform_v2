@@ -1,5 +1,5 @@
-import stripe from "../config/stripe.js";
-import supabase from "../config/db.js";
+import stripe from "./stripe.js";
+import supabase from "./db.js";
 
 // CREATE SUBSCRIPTION
 export const createSubscription = async (req, res) => {

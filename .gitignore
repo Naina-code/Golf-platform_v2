@@ -1,0 +1,24 @@
+# Environment
+.env
+.env.local
+.env*.local
+
+# Dependencies
+node_modules/
+frontend-app/node_modules/
+
+# Next.js
+frontend-app/.next/
+frontend-app/out/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.venv/

@@ -2,9 +2,9 @@ import express from "express";
 import {
   createSubscription,
   stripeWebhook
-} from "../controllers/subscriptionController.js";
+} from "./subscriptionController.js";
 
-import { authMiddleware } from "../middleware/authMiddleware.js";
+import { authMiddleware } from "./authMiddleware.js";
 
 const router = express.Router();
 

@@ -1,22 +1,29 @@
 export const calculateWinners = (scores, drawNumbers) => {
-  let winners = [];
-
+  // Group all scores by user_id
+  const scoresByUser = {};
   scores.forEach((s) => {
-    let matchCount = drawNumbers.includes(s.score) ? 1 : 0;
+    if (!scoresByUser[s.user_id]) scoresByUser[s.user_id] = [];
+    scoresByUser[s.user_id].push(s.score);
+  });
+
+  const winners = [];
+
+  Object.entries(scoresByUser).forEach(([user_id, userScores]) => {
+    const matchCount = userScores.filter((score) =>
+      drawNumbers.includes(score)
+    ).length;
 
     if (matchCount >= 3) {
-      let type =
-        matchCount === 5
+      const type =
+        matchCount >= 5
           ? "5-match"
           : matchCount === 4
           ? "4-match"
           : "3-match";
 
       winners.push({
-        user_id: s.user_id,
-        match_count: matchCount,
-        type,
-        status: "pending",
+        user_id,
+        matched_numbers: matchCount,
         payment_status: "pending",
       });
     }

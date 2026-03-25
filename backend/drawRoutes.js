@@ -1,5 +1,5 @@
 import express from "express";
-import { runDraw } from "../../../controllers/drawController.js";
+import { runDraw } from "./drawController.js";
 
 const router = express.Router();
 

@@ -34,11 +34,9 @@ CREATE TABLE IF NOT EXISTS draws (
 CREATE TABLE IF NOT EXISTS scores (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  numbers INTEGER[] NOT NULL,
-  created_at TIMESTAMP DEFAULT NOW(),
-
-  CONSTRAINT check_scores_numbers_length 
-  CHECK (array_length(numbers, 1) = 5)
+  score INTEGER NOT NULL,
+  date DATE NOT NULL DEFAULT CURRENT_DATE,
+  created_at TIMESTAMP DEFAULT NOW()
 );
 
 -- =========================================
